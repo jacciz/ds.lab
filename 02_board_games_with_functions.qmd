@@ -1,0 +1,81 @@
+---
+title: "board games"
+format: html
+embed-resources: true
+editor: visual
+---
+
+## Set-up
+
+```{r}
+library(dplyr)
+library(echarts4r)
+
+# Since this is a notebook, we would need this to render. But since this is a
+# package, I'm using load_all()
+# source("R/splitColumnFromBracket.R")
+# source("R/categorizeRatings.R")
+# source("R/extractTopNGamesAcrossCols.R") 
+# source("R/extractTopNGamesByGroup.R")
+# source("R/extractRatingSummary.R") 
+# source("R/createHorizontalBarChart.R")
+```
+
+```{r}
+# First thing - create a new project but make it R package!
+# Already wrote code to import data from tidytuesday, I just saved as parquet
+
+# Using board game date from tidyTuesday from '2022-01-25'
+# Data comes from BoardGameGeek and xxx
+# https://github.com/rfordatascience/tidytuesday/blob/main/data/2022/2022-01-25/readme.md
+
+game_ratings <- arrow::read_parquet("data-raw/game_ratings.parquet")
+game_details <- arrow::read_parquet("data-raw/game_details.parquet")
+
+games <- left_join(game_ratings, game_details, by = "id")
+```
+
+## Data cleaning and recoding
+
+```{r}
+# Outputs new cols with boardgamedesigner_clean1, etc
+games <- games |> splitColumnFromBracket(column_to_split = boardgamedesigner)
+
+# With the function we can use it for 2 columns!
+games <- games |>
+  dplyr::mutate(average_category = categorizeRatings(average),
+                bayes_average_category = categorizeRatings(bayes_average)
+                )
+```
+
+## Data analysis
+
+```{r}
+top_designers_count <- extractTopNGamesAcrossCols(games, start_with_colname = "boardgamedesigner_clean", top_n = 5)
+
+top_games_by_category <- extractTopNGamesByGroup(df = games,
+                   group_by_this = average_category,
+                   take_max_of_this = users_rated,
+                   top_n = 3)
+```
+
+## Charts!
+
+```{r}
+# Make a chart
+createHorizontalBarChart(df = top_designers_count, x_axis = "value", y_axis = "n")
+
+# Make a table
+top_games_by_category |>
+  dplyr::select(name, average_category) |>
+  dplyr::arrange(rev(average_category)) |>
+  gt::gt()
+```
+
+```{r}
+# To set-up testthat
+# usethis::use_testthat()
+
+# To run all unit tests
+# devtools::test()
+```

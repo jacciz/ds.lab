@@ -1,0 +1,92 @@
+---
+title: "02_board_games_original"
+embed-resources: true
+format: html
+editor: visual
+---
+
+## Set-up
+
+```{r}
+library(dplyr)
+library(echarts4r)
+```
+
+```{r}
+# First thing - create a new project but make it R package!
+# Already wrote code to import data from tidytuesday, I just saved as parquet
+
+# Using board game date from tidyTuesday from '2022-01-25'
+# Data comes from BoardGameGeek and xxx
+# https://github.com/rfordatascience/tidytuesday/blob/main/data/2022/2022-01-25/readme.md
+
+game_ratings <- arrow::read_parquet("data-raw/game_ratings.parquet")
+game_details <- arrow::read_parquet("data-raw/game_details.parquet")
+
+games <- left_join(game_ratings, game_details, by = "id")
+```
+
+## Data cleaning and recoding
+
+```{r}
+
+games <- games |> 
+    dplyr::mutate(
+      # Regex for starts with [ or ends with ]
+      boardgamedesigner_clean = stringr::str_remove_all(boardgamedesigner, "^\\[|\\]$|'"),
+      # Regex to remove comma before Jr.
+      boardgamedesigner_clean = stringr::str_replace_all(boardgamedesigner_clean, ",\\s*(Jr\\.?)", replacement = " \\1")
+    ) |>
+    tidyr::separate_wider_delim(
+      boardgamedesigner_clean,
+      delim = ", ",
+      names_sep = "",
+      too_few = "align_start"
+    )
+
+games <- games |>
+  dplyr::mutate(average_category = 
+    cut(
+    average,
+    breaks = c(0, 2, 4, 6, 8, 10),
+    labels = c("Extremely annoying game", 
+               "Likely won't play this again",
+               "Average - slightly boring", 
+               "Good - willing to play", 
+               "Excellent - always want to play!"),
+    right = FALSE,
+    ordered_result = TRUE
+  ))
+
+```
+
+## Data analysis
+
+```{r}
+top_designers_count <- games |>
+    tidyr::pivot_longer(starts_with("boardgamedesigner_clean"), values_to = "value", names_to = "colname") |>
+    dplyr::count(value, sort = TRUE) |> 
+  dplyr::filter(!is.na(value), value !="(Uncredited)") |> 
+  dplyr::slice_max(n = 10, order_by = n)
+
+top_games_by_category <- games |> 
+  dplyr::group_by(average_category) |> 
+    dplyr::slice_max(order_by = users_rated, n = 3) |> 
+  dplyr::ungroup()
+```
+
+## Charts!
+
+```{r}
+# Make a chart
+top_designers_count |> 
+  arrange(n) |> 
+e_chart(value) |> 
+  e_bar(n) |> e_flip_coords()
+
+# Make a table
+top_games_by_category |> 
+  dplyr::select(name, average_category) |> 
+  dplyr::arrange(rev(average_category)) |> 
+  gt::gt()
+```
