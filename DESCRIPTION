@@ -15,7 +15,7 @@ License: What license is it under?
 Encoding: UTF-8
 LazyData: true
 Imports:
-  dplyr
+  dplyr,
   echarts4r
 Suggests: 
     testthat (>= 3.0.0)
