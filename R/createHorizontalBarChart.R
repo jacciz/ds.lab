@@ -1,17 +1,18 @@
 createHorizontalBarChart <- function(df, x_axis, y_axis){
   df |>
-  arrange(.data[[y_axis]]) |>
-    e_charts_(x_axis) |>
-    e_bar_(y_axis, legend = FALSE) |>
-    e_flip_coords() |>
-    e_tooltip()
+    echarts4r::e_charts_(x_axis) |>
+    echarts4r::e_bar_(y_axis, legend = FALSE) |>
+    echarts4r::e_flip_coords() |>
+    echarts4r::e_tooltip()
 }
 
 # What to test?
 # If the correct x axis is used
+# Data is actually sorted: chart$x$opts$series[[1]]$data
 # Correct class of output
-# Data on first series is correct
 # Correct chart type on first series
+# Handle empty df (no rows)
+# Non-numeric y-axis
 
 # e$x$mapping$x
 #
@@ -36,5 +37,5 @@ createHorizontalBarChart <- function(df, x_axis, y_axis){
 #
 # expect_equal(
 #   plot$x$opts$series[[1]]$type,
-#   "line"
+#   "bar"
 # )

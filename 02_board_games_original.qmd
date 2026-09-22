@@ -3,6 +3,8 @@ title: "02_board_games_original"
 embed-resources: true
 format: html
 editor: visual
+execute:
+  warning: false
 ---
 
 ## Set-up
