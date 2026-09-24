@@ -1,11 +1,15 @@
 ---
-title: "board games"
+title: "board games with functions"
 format: html
 embed-resources: true
 editor: visual
 execute:
   warning: false
 ---
+
+Create a package for your project (optional)
+This allows us to run devtools commands
+`usethis::create_package("ds.lab")`
 
 To set-up testthat
 `usethis::use_testthat()`
@@ -19,7 +23,7 @@ To open test script
 To open R script
 `usethis::use_r()`
 
-To change the enviroment
+To change the environment
 `testthat::local_mocked_bindings()` or {withr}
 
 ## Set-up
@@ -27,7 +31,9 @@ To change the enviroment
 ```{r}
 library(dplyr)
 # Since this is a notebook, we would need this to render. But since this is a
-# package, I'm using load_all()
+# package, I'm using devtools::load_all() to put these functions into the
+# environment
+
 # source("R/splitColumnByBracket.R")
 # source("R/categorizeRatings.R")
 # source("R/extractTopNGamesAcrossCols.R")
@@ -46,7 +52,8 @@ games <- left_join(game_ratings, game_details, by = "id")
 
 ```{r}
 # Outputs new cols with boardgamedesigner_clean1, etc
-games <- games |> splitColumnByBracket(column_to_split = boardgamedesigner) |> splitColumnByBracket(column_to_split = boardgamemechanic)
+games <- games |> 
+  splitColumnByBracket(column_to_split = boardgamedesigner) |> splitColumnByBracket(column_to_split = boardgamemechanic)
 
 # With the function we can use it for 2 columns!
 games <- games |>
@@ -59,9 +66,6 @@ games <- games |>
 
 ```{r}
 top_designers_count <- extractTopNGamesAcrossCols(games, start_with_colname = "boardgamedesigner_clean", top_n = 5)
-
-# Look at another column easily!!
-top_mechanic_count <- extractTopNGamesAcrossCols(games, start_with_colname = "boardgamemechanic_clean", top_n = 5)
 
 top_games_by_category <- extractTopNGamesByGroup(df = games,
                    group_by_this = average_category,

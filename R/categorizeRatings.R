@@ -1,27 +1,27 @@
 categorizeRatings <- function(rating){
-
-  # Maybe we don't want NA values ?
-  # assertthat::assert_that(all(!is.null(rating), !is.na(rating), is.numeric(rating)), msg = "rating must not be NA or NULL")
-  #
-  # assertthat::assert_that(is.numeric(rating), msg = "rating must be an integer")
-
   cut(
     rating,
-    breaks = c(0, 2, 4, 6, 8, 10.0001),
+    breaks = c(0, 2, 4, 6, 8, 10),
     labels = c("Extremely annoying game",
                "Likely won't play this again",
                "Average - slightly boring",
                "Good - willing to play",
-               "Excellent - always want to play!"),
-    right = FALSE,
-    ordered_result = TRUE
+               "Excellent - always want to play!")
   )
 }
 
-# What to test?
+# Expected behavior
 # Output is an ordered factor
-# Correct ordered factors
+# 10 should be "Excellent"
+# 2 is mapped to "Likely won't play again"
+# Want user to remove NA - 2 ways to write error messages and 2 ways to write unit tests for those
+# Want only values 0 - 10
+
+# Things we could test
+# Input is an numeric
 # How to deal with NA values in rating?
 # Values at the ends - 0 and 10
 # Or with values outside 1 - 10 ?
-# It cuts where we want it to as right = FALSE
+# right = FALSE,
+# include.lowest = TRUE,
+# ordered_result = TRUE

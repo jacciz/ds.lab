@@ -1,5 +1,5 @@
 ---
-title: "02_board_games_original"
+title: "board games no functions"
 embed-resources: true
 format: html
 editor: visual
@@ -28,11 +28,10 @@ game_details <- arrow::read_parquet("data-raw/game_details.parquet")
 games <- left_join(game_ratings, game_details, by = "id")
 ```
 
-## Data cleaning and recoding
+## Data analysis
 
 ```{r}
-
-games <- games |> 
+games |>
     dplyr::mutate(
       # Regex for starts with [ or ends with ]
       boardgamedesigner_clean = stringr::str_remove_all(boardgamedesigner, "^\\[|\\]$|'"),
@@ -44,10 +43,40 @@ games <- games |>
       delim = ", ",
       names_sep = "",
       too_few = "align_start"
-    )
+    ) |> 
+    tidyr::pivot_longer(starts_with("boardgamedesigner_clean"), values_to = "value", names_to = "colname") |>
+    dplyr::count(value, sort = TRUE) |> 
+  dplyr::filter(!is.na(value), value !="(Uncredited)") |> 
+  dplyr::slice_max(n = 5, order_by = n) |> 
+  arrange(n) |> 
+e_chart(value) |> 
+  e_bar(n) |> e_flip_coords() |> 
+  e_tooltip()
 
-games <- games |>
-  dplyr::mutate(average_category = 
+games |>
+    dplyr::mutate(
+      # Regex for starts with [ or ends with ]
+      boardgamemechanic_clean = stringr::str_remove_all(boardgamemechanic, "^\\[|\\]$|'"),
+      # Regex to remove comma before Jr.
+      boardgamemechanic_clean = stringr::str_replace_all(boardgamemechanic_clean, ",\\s*(Jr\\.?)", replacement = " \\1")
+    ) |>
+    tidyr::separate_wider_delim(
+      boardgamemechanic_clean,
+      delim = ", ",
+      names_sep = "",
+      too_few = "align_start"
+    ) |> 
+    tidyr::pivot_longer(starts_with("boardgamemechanic_clean"), values_to = "value", names_to = "colname") |>
+    dplyr::count(value, sort = TRUE) |> 
+  dplyr::filter(!is.na(value), value !="(Uncredited)") |> 
+  dplyr::slice_max(n = 5, order_by = n) |> 
+  arrange(n) |> 
+e_chart(value) |> 
+  e_bar(n) |> e_flip_coords() |> 
+  e_tooltip()
+
+games |> 
+    dplyr::mutate(average_category = 
     cut(
     average,
     breaks = c(0, 2, 4, 6, 8, 10),
@@ -55,40 +84,13 @@ games <- games |>
                "Likely won't play this again",
                "Average - slightly boring", 
                "Good - willing to play", 
-               "Excellent - always want to play!"),
-    right = FALSE,
-    ordered_result = TRUE
-  ))
-
-```
-
-## Data analysis
-
-```{r}
-top_designers_count <- games |>
-    tidyr::pivot_longer(starts_with("boardgamedesigner_clean"), values_to = "value", names_to = "colname") |>
-    dplyr::count(value, sort = TRUE) |> 
-  dplyr::filter(!is.na(value), value !="(Uncredited)") |> 
-  dplyr::slice_max(n = 10, order_by = n)
-
-top_games_by_category <- games |> 
+               "Excellent - always want to play!")
+  )) |> 
   dplyr::group_by(average_category) |> 
     dplyr::slice_max(order_by = users_rated, n = 3) |> 
-  dplyr::ungroup()
-```
-
-## Charts!
-
-```{r}
-# Make a chart
-top_designers_count |> 
-  arrange(n) |> 
-e_chart(value) |> 
-  e_bar(n) |> e_flip_coords()
-
-# Make a table
-top_games_by_category |> 
+  dplyr::ungroup() |> 
   dplyr::select(name, average_category) |> 
   dplyr::arrange(rev(average_category)) |> 
   gt::gt()
 ```
+

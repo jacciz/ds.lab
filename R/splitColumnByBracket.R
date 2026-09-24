@@ -1,6 +1,6 @@
 splitColumnByBracket <- function(df, column_to_split, delim = ", ") {
 
-  # NSE - adds '_clean' to end of colname
+  # Adds '_clean' to end of colname
   clean_col <- paste0(rlang::as_name(rlang::ensym(column_to_split)), "_clean")
 
   df |>
