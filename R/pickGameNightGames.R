@@ -1,5 +1,5 @@
-pickGameNightGames <- function(games, n_players, max_minutes) {
-  games |>
+pickGameNightGames <- function(df, n_players, max_minutes) {
+  df |>
     dplyr::filter(minplayers <= n_players, maxplayers >= n_players,
            playingtime <= max_minutes) |>
     dplyr::arrange(playingtime)
